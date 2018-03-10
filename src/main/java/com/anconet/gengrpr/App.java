@@ -79,7 +79,7 @@ public class App {
 		Option groupCount = Option.builder("g").longOpt("groupcount").desc("number of groups to create").hasArg()
 				.argName("NUMBER").build();
 
-		Option itemsPerGroup = Option.builder("i").longOpt("itemspergroup").desc("number of items per group\"").hasArg()
+		Option itemsPerGroup = Option.builder("i").longOpt("itemspergroup").desc("number of items per group").hasArg()
 				.argName("NUMBER").build();
 
 		options.addOption(help);
