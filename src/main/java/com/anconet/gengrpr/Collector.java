@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
 import org.apache.commons.io.FileUtils;
 
 import com.anconet.gengrpr.model.Item;
@@ -15,14 +14,9 @@ public class Collector {
 	private List<String> lines;
 	private List<Item> items = new ArrayList<Item>();
 
-	public List<Item> collect(File file) {
+	public List<Item> collect(File file) throws IOException {
 
-		try {
-			lines = FileUtils.readLines(file, "UTF-8");
-
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		lines = FileUtils.readLines(file, "UTF-8");
 
 		for (String s : lines) {
 
@@ -30,7 +24,7 @@ public class Collector {
 
 			Item item = new Item(lineParts[0]);
 
-			item.setProperties(new ArrayList<>(Arrays.asList(lineParts)));
+			item.setProperties(new ArrayList<String>(Arrays.asList(lineParts)));
 			item.getProperties().remove(0);
 
 			items.add(item);

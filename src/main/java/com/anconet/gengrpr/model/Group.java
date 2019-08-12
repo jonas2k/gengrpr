@@ -41,6 +41,7 @@ public class Group {
 	public String toString() {
 
 		StringBuilder strBuilder = new StringBuilder();
+		strBuilder.append("**************\n");
 		strBuilder.append(this.getName() + "\n");
 		strBuilder.append("**************\n");
 
