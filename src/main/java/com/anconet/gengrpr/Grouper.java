@@ -19,6 +19,11 @@ public class Grouper {
 		List<Group> groups = new ArrayList<Group>();
 		Set<Item> usedItems = new HashSet<Item>();
 
+		return process(items, groupCount, itemsPerGroup, groups, usedItems);
+	}
+
+	private List<Group> process(List<Item> items, int groupCount, int itemsPerGroup, List<Group> groups,
+			Set<Item> usedItems) {
 		for (int i = 0; i < groupCount; i++) {
 			groups.add(new Group("Group" + (i + 1)));
 		}
@@ -37,13 +42,10 @@ public class Grouper {
 		return groups;
 	}
 
-	public List<Group> group(List<Item> items, int groupCount, int itemsPerGroup, int rounds) {
-
+	public List<Group> group(List<Item> items, int groupCount, int itemsPerGroup, List<Item> blacklistItems) {
 		List<Group> groups = new ArrayList<Group>();
+		Set<Item> usedItems = new HashSet<Item>(blacklistItems);
 
-		for (int i = 0; i < rounds; i++) {
-			groups.addAll(this.group(items, groupCount, itemsPerGroup));
-		}
-		return groups;
+		return process(items, groupCount, itemsPerGroup, groups, usedItems);
 	}
 }
