@@ -24,7 +24,7 @@ public class Collector {
 
 			Item item = new Item(lineParts[0]);
 
-			item.setProperties(new ArrayList<String>(Arrays.asList(lineParts)));
+			item.setProperties(Arrays.asList(lineParts));
 			item.getProperties().remove(0);
 
 			items.add(item);

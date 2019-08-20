@@ -41,12 +41,12 @@ public class Group {
 	public String toString() {
 
 		StringBuilder strBuilder = new StringBuilder();
-		strBuilder.append("**************\n");
-		strBuilder.append(this.getName() + "\n");
-		strBuilder.append("**************\n");
+		strBuilder.append(String.format("**************%n"));
+		strBuilder.append(String.format("%s%n", this.getName()));
+		strBuilder.append(String.format("**************%n"));
 
 		for (Item i : this.items) {
-			strBuilder.append(i.toString() + "\n");
+			strBuilder.append(String.format("%s%n", i.toString()));
 		}
 
 		return strBuilder.toString();
