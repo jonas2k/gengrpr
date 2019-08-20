@@ -1,1 +1,1 @@
-# Gengrpr - A generic grouping tool
+# gengrpr - a generic grouping tool
