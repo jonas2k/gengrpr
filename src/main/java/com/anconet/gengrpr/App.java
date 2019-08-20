@@ -2,113 +2,94 @@ package com.anconet.gengrpr;
 
 import java.io.File;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.List;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 import org.apache.commons.io.FileUtils;
 
+import com.anconet.gengrpr.helpers.Constants;
 import com.anconet.gengrpr.model.Group;
 import com.anconet.gengrpr.model.Item;
-import com.anconet.gengrpr.validation.IInputValidator;
-import com.anconet.gengrpr.validation.InputValidator;
 
-public class App {
+import picocli.CommandLine;
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Model.CommandSpec;
+import picocli.CommandLine.Option;
+import picocli.CommandLine.Spec;
 
-	private static Grouper grouper = new Grouper();
+@Command(name = Constants.APP_NAME, mixinStandardHelpOptions = true, version = Constants.APP_NAME + " "
+		+ Constants.APP_VERSION, sortOptions = false, description = "Generic grouping application", footer = { "",
+				"Source file has to contain one element per line and may contain multiple semicolon separated attributes, e.g.",
+				"", "\"name\";\"attribute1\";\"attribute2\"" }, header = { "   __ _  ___ _ __   __ _ _ __ _ __  _ __ ",
+						"  / _` |/ _ \\ '_ \\ / _` | '__| '_ \\| '__|", " | (_| |  __/ | | | (_| | |  | |_) | |   ",
+						"  \\__, |\\___|_| |_|\\__, |_|  | .__/|_|   ", "   __/ |            __/ |    | |         ",
+						"  |___/            |___/     |_|         " + Constants.APP_VERSION + " by "
+								+ Constants.APP_AUTHOR,
+						"" })
+public class App implements Runnable {
 
-	private static IInputValidator inputValidator = new InputValidator();
-	private static CommandLine commandLine;
+	@Option(names = { "-s",
+			"--source-file" }, required = true, description = "source file containing elements to be grouped, required")
+	private File sourceFile;
+
+	@Option(names = { "-b", "--blacklist-file" }, description = "optional blacklist file containing elements to skip")
+	private File blacklistFile;
+
+	@Option(names = { "-g",
+			"--group-count" }, required = true, description = "number of groups to be created, required")
+	private int groupCount;
+
+	@Option(names = { "-i", "--items-per-group" }, required = true, description = "number of items per group, required")
+	private int itemsPerGroup;
+
+	@Option(names = { "-r", "--rounds" }, description = "optional number of grouping rounds")
+	private int roundCount = 1;
+
+	@Spec
+	CommandSpec spec;
 
 	public static void main(String[] args) {
+		new CommandLine(new App()).execute(args);
+	}
 
-		Options options = prepareOptions();
+	@Override
+	public void run() {
+
+		Arrays.stream(this.spec.usageMessage().header())
+				.forEach(l -> System.out.println(CommandLine.Help.Ansi.AUTO.string(l)));
 
 		try {
-			CommandLineParser parser = new DefaultParser();
-			commandLine = parser.parse(options, args);
+			List<Item> sourceItems = new Collector().collect(sourceFile);
 
-			if (inputIsValid()) {
-
-				File inputFile = new File(commandLine.getOptionValue("f"));
-				int groupCount = Integer.parseInt(commandLine.getOptionValue("g"));
-				int itemsPerGroup = Integer.parseInt(commandLine.getOptionValue("i"));
-
-				List<Item> items = new Collector().collect(inputFile);
-
-				int roundCount = 1;
-				if (commandLine.hasOption("r")) {
-					roundCount = Integer.parseInt(commandLine.getOptionValue("r"));
-				}
-
-				for (int i = 0; i < roundCount; i++) {
-
-					List<Group> groups;
-
-					if (commandLine.hasOption("b")) {
-						List<Item> blacklistItems = new Collector().collect(new File(commandLine.getOptionValue("b")));
-						groups = grouper.group(items, groupCount, itemsPerGroup, blacklistItems);
-					} else {
-						groups = grouper.group(items, groupCount, itemsPerGroup);
-					}
-
-					File outputFile = new File(System.getProperty("user.home"),
-							new SimpleDateFormat("'gengrpr-'yyyyMMddHHmmss'.txt'").format(new Date()));
-
-					for (Group group : groups) {
-						System.out.println(group.toString());
-						FileUtils.write(outputFile, group.toString(), "UTF-8", true);
-					}
-					System.out.println("Wrote output file to \"" + outputFile + "\".");
-				}
-
-			} else {
-				throw new IllegalArgumentException("Invalid input.");
+			if (blacklistFile != null) {
+				List<Item> blacklistItems = new Collector().collect(blacklistFile);
+				sourceItems.removeAll(blacklistItems);
 			}
 
-		} catch (ParseException | IllegalArgumentException | IOException e) {
-			System.out.println(e.getMessage());
-			printHelp(options);
+			for (int round = 1; round <= roundCount; round++) {
+				List<Group> groups = new Grouper().group(sourceItems, groupCount, itemsPerGroup);
+				writeGroupsToFile(groups, getOutputFile(round));
+			}
+		} catch (IllegalArgumentException | IOException e) {
+			System.err.println(e.getMessage());
 		}
 	}
 
-	private static boolean inputIsValid() {
-		return inputValidator.validate(commandLine);
+	private void writeGroupsToFile(List<Group> groups, File outputFile) throws IOException {
+		for (Group group : groups) {
+			System.out.println(group.toString());
+			FileUtils.write(outputFile, group.toString(), "UTF-8", true);
+		}
+		System.out.printf("Wrote output file to \"%s\".%n", outputFile);
 	}
 
-	private static void printHelp(Options options) {
-		new HelpFormatter().printHelp("gengrpr", options);
+	private File getOutputFile(int round) {
+		return new File(System.getProperty("user.home"), getOutputFileName(round));
 	}
 
-	private static Options prepareOptions() {
-		Options options = new Options();
-
-		Option help = new Option("h", "help", false, "print this message");
-		Option sourceFile = Option.builder("f").longOpt("sourcefile").desc("input file, required").hasArg()
-				.argName("FILE").build();
-		Option groupCount = Option.builder("g").longOpt("groupcount").desc("number of groups to create, required")
-				.hasArg().argName("NUMBER").build();
-		Option itemsPerGroup = Option.builder("i").longOpt("itemspergroup").desc("number of items per group, required")
-				.hasArg().argName("NUMBER").build();
-		Option blacklistFile = Option.builder("b").longOpt("blacklist").desc("blacklist file").hasArg().argName("FILE")
-				.build();
-		Option roundCount = Option.builder("r").longOpt("rounds").desc("number of rounds").hasArg().argName("NUMBER")
-				.build();
-
-		options.addOption(help);
-		options.addOption(sourceFile);
-		options.addOption(groupCount);
-		options.addOption(itemsPerGroup);
-		options.addOption(blacklistFile);
-		options.addOption(roundCount);
-
-		return options;
+	private String getOutputFileName(int round) {
+		return String.format("%s-%s-r%s.txt", Constants.APP_NAME,
+				LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss")), round);
 	}
 }
