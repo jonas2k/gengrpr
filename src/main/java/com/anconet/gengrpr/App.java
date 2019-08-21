@@ -11,6 +11,8 @@ import org.apache.commons.io.FileUtils;
 import com.anconet.gengrpr.helpers.Constants;
 import com.anconet.gengrpr.model.Group;
 import com.anconet.gengrpr.model.Item;
+import com.anconet.gengrpr.workers.Collector;
+import com.anconet.gengrpr.workers.Grouper;
 
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
@@ -30,20 +32,20 @@ import picocli.CommandLine.Spec;
 public class App implements Runnable {
 
 	@Option(names = { "-s",
-			"--source-file" }, required = true, description = "source file containing elements to be grouped, required")
+			"--source-file" }, required = true, description = "source file containing elements to be grouped, required.")
 	private File sourceFile;
 
-	@Option(names = { "-b", "--blacklist-file" }, description = "optional blacklist file containing elements to skip")
+	@Option(names = { "-b", "--blacklist-file" }, description = "optional blacklist file containing elements to skip.")
 	private File blacklistFile;
 
 	@Option(names = { "-g",
-			"--group-count" }, required = true, description = "number of groups to be created, required")
+			"--group-count" }, required = true, description = "number of groups to be created, required.")
 	private int groupCount;
 
-	@Option(names = { "-i", "--items-per-group" }, required = true, description = "number of items per group, required")
+	@Option(names = { "-i", "--items-per-group" }, required = true, description = "number of items per group, required.")
 	private int itemsPerGroup;
 
-	@Option(names = { "-r", "--rounds" }, description = "optional number of grouping rounds")
+	@Option(names = { "-r", "--rounds" }, description = "optional number of grouping rounds.")
 	private int roundCount = 1;
 
 	@Spec

@@ -1,4 +1,4 @@
-package com.anconet.gengrpr;
+package com.anconet.gengrpr.workers;
 
 import java.io.File;
 import java.io.IOException;
