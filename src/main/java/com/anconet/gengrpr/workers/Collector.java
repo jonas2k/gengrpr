@@ -23,11 +23,10 @@ public class Collector {
 			String[] lineParts = s.split(";");
 
 			Item item = new Item(lineParts[0]);
-
-			item.setProperties(Arrays.asList(Arrays.copyOfRange(lineParts, 1, lineParts.length)));
+			item.setProperties(new ArrayList<>(Arrays.asList(lineParts)));
+			item.getProperties().remove(0);
 
 			items.add(item);
-
 		}
 		return items;
 	}
